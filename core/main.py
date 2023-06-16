@@ -385,6 +385,7 @@ class FSM_LINEAR(object):
         d_QN_first = cuda.to_device(QN_first)
         d_tau_CD = cuda.to_device(chain.tau_CD)
         d_Z = cuda.to_device(chain.Z)
+        d_numshuffle = cuda.to_device(chain.numshuffle)
         d_found_shift = cuda.to_device(found_shift)
         d_found_index = cuda.to_device(found_index)
         d_shift_probs = cuda.to_device(shift_probs)
@@ -541,7 +542,7 @@ class FSM_LINEAR(object):
                                                                                             d_t_cr, d_new_t_cr, d_f_t, d_tau_CD, d_new_tau_CD,
                                                                                             d_rand_used, d_add_rand, d_tau_CD_used_SD,
                                                                                             d_tau_CD_used_CD,d_tau_CD_gauss_rand_SD,
-                                                                                            d_tau_CD_gauss_rand_CD)
+                                                                                            d_tau_CD_gauss_rand_CD,d_numshuffle)
                         
                         #update step counter for arrays and array positions
                         self.step_count+=1
@@ -607,7 +608,7 @@ class FSM_LINEAR(object):
                 
                     if self.flow or self.turn_flow_off: #if flow, calculate flow stress tensor for each chain
                         if self.flow:
-                            ensemble_kernel.calc_flow_stress[blockspergrid,threadsperblock](d_Z,d_QN,d_res)
+                            ensemble_kernel.calc_flow_stress[blockspergrid,threadsperblock](d_Z,d_QN,d_res,d_numshuffle)
                         res_host = d_res.copy_to_host()
                         fileio.write_stress(self.input_data,self.flow,self.turn_flow_off,x_sync+1,next_sync_time,res_host,self.output_dir,self.sim_ID)
                     

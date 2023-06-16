@@ -123,7 +123,7 @@ def track_newQ(Z,new_Q,temp_Q,found_shift,found_index,reach_flag):
 
     
 @cuda.jit
-def calc_flow_stress(Z,QN,stress):
+def calc_flow_stress(Z,QN,stress,numshuffle):
     '''
     GPU kernel that calculates the flow stress tensor (only used when EQ_calc is set to 'msd')
     
@@ -158,7 +158,7 @@ def calc_flow_stress(Z,QN,stress):
     stress[i,0,4] = stress_yz
     stress[i,0,5] = stress_xz
     stress[i,0,6] = Z[i]
-    
+    stress[i,0,7] = numshuffle[i]
     return
 
         
@@ -724,7 +724,7 @@ def time_control_kernel(Z,QN,new_Q,QN_first,NK,chain_time,tdt,result,calc_type,f
 @cuda.jit
 def apply_step_kernel(Z, QN, QN_first, QN_create_SDCD, chain_time, time_compensation, sum_W_sorted,
                  found_shift, found_index, reach_flag, tdt,
-                 t_cr, new_t_cr, f_t, tau_CD, new_tau_CD, rand_used, add_rand, tau_CD_used_SD, tau_CD_used_CD, tau_CD_gauss_rand_SD, tau_CD_gauss_rand_CD):
+                      t_cr, new_t_cr, f_t, tau_CD, new_tau_CD, rand_used, add_rand, tau_CD_used_SD, tau_CD_used_CD, tau_CD_gauss_rand_SD, tau_CD_gauss_rand_CD,numshuffle):
    
     '''
     GPU kernel to apply the transition between chain states (Kuhn step shuffle, create/destroy slip-link, etc.) and update the chain time after the transition occurs.
@@ -751,6 +751,7 @@ def apply_step_kernel(Z, QN, QN_first, QN_create_SDCD, chain_time, time_compensa
         tau_CD_used_SD - index for tau_CD_gauss_rand_SD to access random numbers from guassian distribution for strand orientation Q 
         tau_CD_used_CD - same as tau_CD_used_SD but for constraint dynamic arrays (tau_CD_gauss_rand_CD)
         tau_CD_gauss_rand_SD/CD - arrays that store random values from gaussian distribution for creating new strand orientations Q
+        numshuffle - number of total shuffle moves for each chain
     '''
     i = cuda.blockIdx.x*cuda.blockDim.x + cuda.threadIdx.x #chain index
     
@@ -791,16 +792,19 @@ def apply_step_kernel(Z, QN, QN_first, QN_create_SDCD, chain_time, time_compensa
     #apply jump processes to each chain
     if jumpType == 0 or jumpType == 1:
         apply_shuffle(i, jumpIdx, jumpType, QN)
-
+        numshuffle[i]+=1                    
     if jumpType == 2 or jumpType == 5:
         apply_destroy(i, jumpIdx, jumpType, QN, QN_first, Z, t_cr, tau_CD, f_t, chain_time)
-        
+
     if jumpType == 3 or jumpType == 6:
         apply_create_SD(i, jumpIdx, jumpType, QN, QN_first, QN_create_SDCD[i], Z, t_cr, new_t_cr[i], tau_CD, new_tau_CD[i], chain_time, tau_CD_used_SD, tau_CD_gauss_rand_SD)
 
+
     if jumpType == 4:
         apply_create_CD(i, jumpIdx, QN, QN_first, QN_create_SDCD[i], Z, t_cr, new_t_cr[i], tau_CD, new_tau_CD[i], tau_CD_used_CD, tau_CD_gauss_rand_CD, add_rand[i])
-        
+
+
+
     return
     
 

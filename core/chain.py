@@ -11,6 +11,7 @@ class ensemble_chains(object):
         self.QN = np.zeros(shape=(config['Nchains'],config['NK'],4),dtype=float)
         self.tau_CD = np.zeros(shape=(config['Nchains'],config['NK']),dtype=float)
         self.Z = np.zeros(shape=config['Nchains'],dtype=float)
+        self.numshuffle = np.zeros(shape=config['Nchains'],dtype=float)
 
         return
 

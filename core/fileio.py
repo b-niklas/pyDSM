@@ -100,7 +100,7 @@ def write_stress(input_data,flow,turn_flow_off,num_sync,time,stress_array,output
     if num_sync == 1:
         with open(stress_output,'w') as f:
             if flow or turn_flow_off:
-                f.write('time, tau_xx, tau_yy, tau_zz, tau_xy, tau_yz, tau_xz, Z, f_newQ, stderr_xx, stderr_yy, stderr_zz, stderr_xy, stderr_yz, stderr_xz, stderr_Z, stderr_f_newQ\n')
+                f.write('time, re_xx, re_yy, re_zz, tau_xy, tau_yz, tau_xz, Z, numshuffle, stderr_xx, stderr_yy, stderr_zz, stderr_xy, stderr_yz, stderr_xz, stderr_Z, stderr_f_newQ\n')
             else:
                 f.write('time, tau_xy_chain0, tau_xy_chain1, ... , tau_xy_Nchains\n')
             np.savetxt(f, combined, delimiter=',', fmt='%.8f')
