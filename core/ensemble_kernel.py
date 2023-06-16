@@ -28,8 +28,8 @@ def apply_oscillatory_flow(Q,dt,kappa,frequency,time):
     Returns: 
         deformed strand orientation
     '''
-    
-    return Q[0] + dt*kappa[0]*math.cos(frequency*time)*Q[0] + dt*kappa[1]*math.cos(frequency*time)*Q[1] + dt*kappa[2]*math.cos(frequency*time)*Q[2], Q[1] + dt*kappa[3]*math.cos(frequency*time)*Q[0] + dt*kappa[4]*math.cos(frequency*time)*Q[1] + dt*kappa[5]*math.cos(frequency*time)*Q[2], Q[2] + dt*kappa[6]*math.cos(frequency*time)*Q[0] + dt*kappa[7]*math.cos(frequency*time)*Q[1] + dt*kappa[8]*math.cos(frequency*time)*Q[2], Q[3]
+    pi=3.14159265358979323846264338327950
+    return Q[0] + dt*kappa[0]*math.cos(2*pi*frequency*time)*Q[0] + dt*kappa[1]*math.cos(2*pi*frequency*time)*Q[1] + dt*kappa[2]*math.cos(2*pi*frequency*time)*Q[2], Q[1] + dt*kappa[3]*math.cos(2*pi*frequency*time)*Q[0] + dt*kappa[4]*math.cos(2*pi*frequency*time)*Q[1] + dt*kappa[5]*math.cos(2*pi*frequency*time)*Q[2], Q[2] + dt*kappa[6]*math.cos(2*pi*frequency*time)*Q[0] + dt*kappa[7]*math.cos(2*pi*frequency*time)*Q[1] + dt*kappa[8]*math.cos(2*pi*frequency*time)*Q[2], Q[3]
 
 
 @cuda.jit
@@ -140,6 +140,7 @@ def calc_flow_stress(Z,QN,stress):
         return 
     
     stress_xx = stress_yy = stress_zz = stress_xy = stress_yz = stress_xz = 0.0
+    rex=rey=rez=0.0
     for j in range(0,int(Z[i])):
         stress_xx -= (3.0*QN[i,j,0]*QN[i,j,0] / QN[i,j,3]) #tau_xx
         stress_yy -= (3.0*QN[i,j,1]*QN[i,j,1] / QN[i,j,3]) #tau_yy
@@ -147,10 +148,12 @@ def calc_flow_stress(Z,QN,stress):
         stress_xy -= (3.0*QN[i,j,0]*QN[i,j,1] / QN[i,j,3]) #tau_xy
         stress_yz -= (3.0*QN[i,j,1]*QN[i,j,2] / QN[i,j,3]) #tau_yz
         stress_xz -= (3.0*QN[i,j,0]*QN[i,j,2] / QN[i,j,3]) #tau_xz
-    
-    stress[i,0,0] = stress_xx
-    stress[i,0,1] = stress_yy
-    stress[i,0,2] = stress_zz
+        rex+=QN[i,j,0]
+        rey+=QN[i,j,1]
+        rez+=QN[i,j,2]
+    stress[i,0,0] = rex*rex
+    stress[i,0,1] = rey*rey
+    stress[i,0,2] = rez*rez
     stress[i,0,3] = stress_xy
     stress[i,0,4] = stress_yz
     stress[i,0,5] = stress_xz

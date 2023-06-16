@@ -42,8 +42,8 @@ class FSM_LINEAR(object):
         self.distr=distr
         
         #read in input file and parameters
-        if os.path.isfile('input.yaml'):
-            with open('input.yaml') as f:
+        if os.path.isfile('input%i.yaml'%sim_ID):
+            with open('input%i.yaml'%sim_ID) as f:
                 self.input_data = yaml.load(f, Loader=yaml.FullLoader)
                 
             #get results path ready
